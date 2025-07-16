@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cron式ジェネレーター</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 500px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      font-weight: 600;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #34495e;
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    select, input[type="number"], input[type="time"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e1e8ed;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: white;
+    }
+
+    select:hover, input:hover {
+      border-color: #667eea;
+      background: white;
+    }
+
+    .config-section {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border: 1px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+
+    .config-section:hover {
+      background: #f1f3f4;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .inline-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .inline-group input[type="number"] {
+      width: 80px;
+    }
+
+    .inline-group span {
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .cron-output {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      border-radius: 12px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cron-output::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .cron-output strong {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: #bdc3c7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cron-expr {
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #00ff88;
+      word-break: break-all;
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+    }
+
+    .description {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #ecf0f1;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .container {
+        padding: 1.5rem;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* アニメーション効果 */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏰ Cron式ジェネレーター</h1>
+    
+    <div class="form-group">
+      <label>実行頻度</label>
+      <select id="freq">
+        <option value="every_minutes">毎分（間隔指定）</option>
+        <option value="daily">毎日（時刻指定）</option>
+        <option value="weekly">毎週（曜日＋時刻）</option>
+        <option value="monthly">毎月（日時＋時刻）</option>
+      </select>
+    </div>
+
+    <div id="config">
+      <div class="config-section fade-in" data-for="every_minutes">
+        <label>間隔設定</label>
+        <div class="inline-group">
+          <input type="number" id="minInterval" min="1" value="5" />
+          <span>分ごとに実行</span>
+        </div>
+      </div>
+
+      <div class="config-section fade-in" data-for="daily" style="display:none">
+        <label>実行時刻（24時間形式）</label>
+        <input type="time" id="dailyTime" value="00:00" />
+      </div>
+
+      <div class="config-section fade-in" data-for="weekly" style="display:none">
+        <div class="form-group">
+          <label>曜日</label>
+          <select id="weeklyDay">
+            <option value="MON">月曜日</option>
+            <option value="TUE">火曜日</option>
+            <option value="WED">水曜日</option>
+            <option value="THU">木曜日</option>
+            <option value="FRI">金曜日</option>
+            <option value="SAT">土曜日</option>
+            <option value="SUN">日曜日</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>実行時刻（24時間形式）</label>
+          <input type="time" id="weeklyTime" value="00:00" />
+        </div>
+      </div>
+
+      <div class="config-section fade-in" data-for="monthly" style="display:none">
+        <div class="form-group">
+          <label>日付</label>
+          <div class="inline-group">
+            <input type="number" id="monthlyDay" min="1" max="31" value="1" />
+            <span>日</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>実行時刻（24時間形式）</label>
+          <input type="time" id="monthlyTime" value="00:00" />
+        </div>
+      </div>
+    </div>
+
+    <div class="cron-output">
+      <strong>生成されたCron式</strong>
+      <div class="cron-expr" id="cronExpr">—</div>
+      <div class="description" id="cronDesc">設定を選択してください</div>
+    </div>
+  </div>
+
+  <script>
+    const freqEl = document.getElementById('freq');
+    const config = document.getElementById('config');
+    const cronOut = document.getElementById('cronExpr');
+    const cronDesc = document.getElementById('cronDesc');
+
+    const descriptions = {
+      every_minutes: (n) => `${n}分おきに実行されます`,
+      daily: (time) => `毎日 ${time} に実行されます`,
+      weekly: (day, time) => {
+        const dayNames = {
+          MON: '月曜日', TUE: '火曜日', WED: '水曜日', THU: '木曜日',
+          FRI: '金曜日', SAT: '土曜日', SUN: '日曜日'
+        };
+        return `毎週${dayNames[day]} ${time} に実行されます`;
+      },
+      monthly: (day, time) => `毎月${day}日 ${time} に実行されます`
+    };
+
+    function updateVisibility() {
+      [...config.children].forEach(div => {
+        if (div.getAttribute('data-for') === freqEl.value) {
+          div.style.display = 'block';
+          div.classList.add('fade-in');
+        } else {
+          div.style.display = 'none';
+          div.classList.remove('fade-in');
+        }
+      });
+    }
+
+    function genCron() {
+      const freq = freqEl.value;
+      let expr = '';
+      let desc = '';
+
+      if (freq === 'every_minutes') {
+        const n = document.getElementById('minInterval').value || 1;
+        expr = `cron(0/${n} * * * ? *)`;
+        desc = descriptions.every_minutes(n);
+      }
+      else if (freq === 'daily') {
+        const [h, m] = document.getElementById('dailyTime').value.split(':');
+        expr = `cron(${m} ${h} * * ? *)`;
+        desc = descriptions.daily(`${h}:${m}`);
+      }
+      else if (freq === 'weekly') {
+        const day = document.getElementById('weeklyDay').value;
+        const [h, m] = document.getElementById('weeklyTime').value.split(':');
+        expr = `cron(${m} ${h} ? * ${day} *)`;
+        desc = descriptions.weekly(day, `${h}:${m}`);
+      }
+      else if (freq === 'monthly') {
+        const d = document.getElementById('monthlyDay').value;
+        const [h, m] = document.getElementById('monthlyTime').value.split(':');
+        expr = `cron(${m} ${h} ${d} * ? *)`;
+        desc = descriptions.monthly(d, `${h}:${m}`);
+      }
+
+      cronOut.textContent = expr;
+      cronDesc.textContent = desc;
+    }
+
+    // イベント登録
+    freqEl.addEventListener('change', () => { 
+      updateVisibility(); 
+      genCron(); 
+    });
+
+    config.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', genCron);
+    });
+
+    // 初期表示
+    updateVisibility();
+    genCron();
+  </script>
+</body>
+</html>
